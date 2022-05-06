@@ -1,0 +1,16 @@
+{% extends 'catalog/base.html' %}
+
+
+{% block content %}
+
+<ul>
+    {% for p in points %}
+    <li>
+        <h2>{{p.text | linebreaks | truncatewords:10}}</h2>
+        <p>{{p.category | linebreaks | truncatewords:10}}</p>
+        <hr>
+        <a href="{{ p.get_absolute_url }}">Изучить</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

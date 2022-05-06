@@ -1,0 +1,12 @@
+{% extends 'catalog/base.html' %}
+
+{% block content %}
+<h1>{{point.title}}</h1>
+
+{% if point.image %}
+
+{% endif %}
+
+{{point.text|linebreaks}}
+{{point.translate|linebreaks}}
+{% endblock %}
