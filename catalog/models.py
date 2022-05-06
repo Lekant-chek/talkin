@@ -1,20 +1,12 @@
-import uuid
-
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
 from mptt.models import MPTTModel, TreeForeignKey
-
-
-class Level(models.Model):
-    name = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.name
 
 
 class Category(MPTTModel):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(max_length=100)
+    slug = models.SlugField(max_length=200, unique=True, db_index=True, verbose_name="URL.")
     parent = TreeForeignKey(
         'self',
         related_name='children',
@@ -23,11 +15,16 @@ class Category(MPTTModel):
         blank=True
     )
 
-    class Meta:
-        verbose_name_plural = 'Categories'
-
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('category', kwargs={'category_id': self.pk})
+
+    class Meta:
+        verbose_name_plural = 'Категории'
+        verbose_name = 'Категория'
+        ordering = ['id']
 
     class MPTTMeta:
         order_insertion_by = ['name']
@@ -42,39 +39,24 @@ class Tag(models.Model):
 
 
 class Point(models.Model):
-    name = models.CharField(max_length=100, blank=True)
+    title = models.CharField(max_length=100, blank=True)
+    slug = models.SlugField(max_length=200, unique=True, db_index=True, verbose_name="URL")
     text = models.TextField()
     translate = models.TextField()
     image = models.ImageField(upload_to='cards/', blank=True)
-    category = models.ForeignKey(
-        Category,
-        related_name='point',
-        on_delete=models.SET_NULL,
-        null=True
-    )
-    level = models.ForeignKey(
-        Level,
-        related_name='point',
-        on_delete=models.SET_NULL,
-        null=True
-    )
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, verbose_name="Категории")
     tags = models.ManyToManyField(Tag, related_name='point', blank=True)
-
-    class Meta:
-        ordering = ['level']
-
-    def __str__(self):
-        return self.name
-
-
-class Target(models.Model):
     student = models.ForeignKey(User, related_name='targets', on_delete=models.CASCADE)
-    point = models.ForeignKey(Point, on_delete=models.SET_NULL, null=True)
-    create_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateField(auto_now_add=True)
     is_complete = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['-create_at']
+        ordering = ['category']
+        verbose_name = 'Учебные элементы'
+        verbose_name_plural = 'Учебные элементы'
 
     def __str__(self):
-        return f"self.create_at"
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse('point', kwargs={'point_id': self.pk})

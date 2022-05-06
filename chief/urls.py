@@ -3,10 +3,15 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+
+from catalog.views import PointAPIList
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('catalog.urls')),
+
+    path('api/v1/pointlist/', PointAPIList.as_view()),
 ]
 
 
