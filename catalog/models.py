@@ -19,7 +19,7 @@ class Category(MPTTModel):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('category', kwargs={'category_id': self.pk})
+        return reverse('category', kwargs={'category_slug': self.slug})
 
     class Meta:
         verbose_name_plural = 'Категории'
@@ -50,13 +50,13 @@ class Point(models.Model):
     created_at = models.DateField(auto_now_add=True)
     is_complete = models.BooleanField(default=False)
 
-    class Meta:
-        ordering = ['category']
-        verbose_name = 'Учебные элементы'
-        verbose_name_plural = 'Учебные элементы'
-
     def __str__(self):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('point', kwargs={'point_id': self.pk})
+        return reverse('point', kwargs={'point_slug': self.slug})
+
+    class Meta:
+        ordering = ['category']
+        verbose_name = 'Учебные элементы'
+        verbose_name_plural = 'Учебные элементы'

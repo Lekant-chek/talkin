@@ -1,24 +1,71 @@
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.views import LoginView
 from django.http import HttpResponse, Http404, HttpResponseNotFound
-from django.shortcuts import render, get_object_or_404
-from django.views.generic import ListView, DetailView
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, CreateView
 from rest_framework import generics
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+from .forms import *
 from .models import *
+from .utils import *
 from .serializers import PointSerializer
 
-menu = [{'title': "Войти", 'url_name': "login"},
-        {'title': "Грамматика", 'url_name': "grammar"}
-        ]
+
+class PointList(DataMixin, ListView):
+    model = Point
+    template_name = 'catalog/index.html'
+    context_object_name = 'points'
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title='Главная страница')
+        return dict(list(context.items()) + list(c_def.items()))
+
+    def get_queryset(self):
+        return Point.objects.filter(is_complete=False)
 
 
-def index(request):
-    points = Point.objects.all()
+class Categories(DataMixin, ListView):
+    model = Point
+    template_name = 'catalog/index.html'
+    context_object_name = 'points'
+    allow_empty = False
 
-    context = {
-        'points': points,
-        'title': 'Главная страница',
-        'category_selected': 0,
-    }
-    return render(request, 'catalog/index.html', context=context)
+    def get_queryset(self):
+        return Point.objects.filter(category__slug=self.kwargs['category_slug'], is_complete=False)
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title='Категория - ' + str(context['points'][0].category),
+                                      category_selected=context['points'][0].category_id)
+        return dict(list(context.items()) + list(c_def.items()))
+
+
+class AddPoint(LoginRequiredMixin, DataMixin, CreateView):
+    form_class = AddPointForm
+    template_name = 'catalog/addpoint.html'
+    success_url = reverse_lazy('home')
+    login_url = reverse_lazy('home')
+    raise_exception = True
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title='Добавление учебного материала')
+        return dict(list(context.items()) + list(c_def.items()))
+
+
+class StudyPoint(DataMixin, DetailView):
+    model = Point
+    template_name = 'catalog/point.html'
+    slug_url_kwarg = 'point_slug'
+    context_object_name = 'point'
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title=context['point'])
+        return dict(list(context.items()) + list(c_def.items()))
 
 
 def grammar(request):
@@ -31,32 +78,6 @@ def login(request):
 
 def pageNotFound(request, exception):
     return HttpResponseNotFound('<h1>Страница не найдена</h1>')
-
-
-def study_point(request, point_id):
-    point = get_object_or_404(Point, pk=point_id)
-    context = {
-        'point': point,
-        'title': point.title,
-        'category_selected': point.category_id
-    }
-
-    return render(request, 'catalog/point.html', context=context)
-
-
-def show_category(request, category_id):
-    points = Point.objects.filter(category_id=category_id)
-
-    if len(points) == 0:
-        raise Http404()
-
-    context = {
-        'points': points,
-        'title': 'Отображение по рубрикам',
-        'category_id': category_id,
-
-    }
-    return render(request, 'catalog/index.html', context=context)
 
 
 class PointAPIList(generics.ListCreateAPIView):
@@ -81,3 +102,24 @@ class PointDetailView(DetailView):
     model = Point
     context_object_name = 'point'
     slug_url_kwarg = 'point_slug'
+
+
+class RegisterUser(DataMixin, CreateView):
+    form_class = RegisterUserForm
+    template_name = 'catalog/register.html'
+    success_url = reverse_lazy('login')
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title='Регистрация')
+        return dict(list(context.items()) + list(c_def.items()))
+
+
+class LoginUser(DataMixin, LoginView):
+    form_class = AuthenticationForm
+    template_name = 'catalog/login.html'
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title='Авторизация')
+        return dict(list(context.items()) + list(c_def.items()))

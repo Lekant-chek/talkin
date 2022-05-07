@@ -12,12 +12,12 @@
 <ul>
     <a href="{% url 'home' %}"></a>
     {% for m in menu %}
-    {% if not forloop.last %}
+
     <li><a href="{% url m.url_name %}">{{m.title}}</a></li>
-    {% else %}
-    <li><a href="{% url m.url_name %}">{{m.title}}</a></li>
-    {% endif %}
-    {% endfor %}
+{% endfor %}
+    <li><a href="{% url 'register' %}">Регистрация</a> | <a href="{% url 'login' %}">Войти</a></li>
+
+
 </ul>
 
 <ul>
@@ -29,7 +29,15 @@
             <li><a href="{% url 'home' %}">Все категории</a></li>
     {% endif %}
 
-   {% show_categories %}
+    {% for c in category %}
+    {% if c.point__count > 0 %}
+        {% if c.pk == category_selected %}
+            <li>{{c.name}}</li>
+        {% else %}
+            <li><a href="{{ c.get_absolute_url }}">{{c.name}}</a></li>
+        {% endif %}
+    {% endif %}
+    {% endfor %}
 
 </ul>
 {% endblock %}
@@ -37,6 +45,36 @@
 {% block content %}
 
 {% endblock %}
+
+<!-- Пагинация -->
+{% if page_obj.has_other_pages %}
+<nav>
+   <ul>
+       {% if page_obj.has_previous %}
+       <li>
+           <a href="?page={{ page_obj.previous_page_number }}">&lt</a>
+       </li>
+       {% endif %}
+
+       {% for p in paginator.page_range %}
+       {% if page_obj.number == p %}
+       <li>{{ p }}</li>
+       {% elif p >= page_obj.number|add:-2 and p <= page_obj.number|add:2 %}
+        <li>
+            <a href="?page={{ p }}">{{ p }}</a>
+       </li>
+       {% endif %}
+       {% endfor %}
+
+       {% if page_obj.has_next %}
+       <li>
+           <a href="?page={{ page_obj.next_page_number }}">&gt</a>
+       </li>
+       {% endif %}
+   </ul>
+</nav>
+{% endif %}
+<!-- Конец блока Пагинация -->
 
 </body>
 </html>

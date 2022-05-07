@@ -5,11 +5,13 @@
 
 <ul>
     {% for p in points %}
+
     <li>
         <h2>{{p.text | linebreaks | truncatewords:10}}</h2>
-        <p>{{p.category | linebreaks | truncatewords:10}}</p>
+        <p>{{p.translate | linebreaks | truncatewords:10}}</p>
+
+        <p><a href="{{ p.get_absolute_url }}">Изучить</a></p>
         <hr>
-        <a href="{{ p.get_absolute_url }}">Изучить</a>
     </li>
     {% endfor %}
 </ul>

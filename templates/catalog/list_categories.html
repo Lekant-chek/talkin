@@ -1,4 +1,6 @@
- {% for c in category %}
+{% extends 'catalog/base.html' %}
+
+{% for c in category %}
         {% if c.pk == category_selected %}
             <li>{{c.name}}</li>
         {% else %}
