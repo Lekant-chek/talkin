@@ -59,4 +59,4 @@ class Point(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('point', kwargs={'point_id': self.pk})
+        return reverse('point', kwargs={'point_slug': self.slug})

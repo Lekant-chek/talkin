@@ -1,7 +1,9 @@
 from django.http import HttpResponse, Http404, HttpResponseNotFound
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
 from rest_framework import generics
+
+from .forms import *
 from .models import *
 from .serializers import PointSerializer
 
@@ -10,19 +12,41 @@ menu = [{'title': "Войти", 'url_name': "login"},
         ]
 
 
-def index(request):
-    points = Point.objects.all()
+class PointList(ListView):
+    model = Point
+    template_name = 'catalog/index.html'
+    context_object_name = 'points'
+    extra_context = {'title': 'Главная страница'}
 
-    context = {
-        'points': points,
-        'title': 'Главная страница',
-        'category_selected': 0,
-    }
-    return render(request, 'catalog/index.html', context=context)
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['menu'] = menu
+        return context
+
+#def index(request):
+#    points = Point.objects.all()
+
+ #   context = {
+ #       'points': points,
+ #       'title': 'Главная страница',
+  #      'category_selected': 0,
+  #  }
+  #  return render(request, 'catalog/index.html', context=context)
 
 
 def grammar(request):
     return render(request, 'catalog/grammar.html', {'menu': menu, 'title': 'Грамматика'})
+
+
+def addpoint(request):
+    if request.method == 'POST':
+        form = AddPointForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        form = AddPointForm()
+    return render(request, 'catalog/addpoint.html', {'form': form, 'menu': menu, 'title': 'Добавить пойнт'})
 
 
 def login(request):
@@ -33,8 +57,8 @@ def pageNotFound(request, exception):
     return HttpResponseNotFound('<h1>Страница не найдена</h1>')
 
 
-def study_point(request, point_id):
-    point = get_object_or_404(Point, pk=point_id)
+def study_point(request, point_slug):
+    point = get_object_or_404(Point, slug=point_slug)
     context = {
         'point': point,
         'title': point.title,
@@ -45,13 +69,13 @@ def study_point(request, point_id):
 
 
 def show_category(request, category_id):
-    points = Point.objects.filter(category_id=category_id)
+    point = Point.objects.filter(category_id=category_id)
 
-    if len(points) == 0:
+    if len(point) == 0:
         raise Http404()
 
     context = {
-        'points': points,
+        'point': point,
         'title': 'Отображение по рубрикам',
         'category_id': category_id,
 
