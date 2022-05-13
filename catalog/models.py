@@ -60,3 +60,9 @@ class Point(models.Model):
         ordering = ['category']
         verbose_name = 'Учебные элементы'
         verbose_name_plural = 'Учебные элементы'
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse('point', kwargs={'point_id': self.pk})

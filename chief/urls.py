@@ -11,9 +11,14 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('catalog.urls')),
 
-    path('api/v1/pointlist/', PointAPIList.as_view()),
+    # path('api/v1/pointlist/', PointAPIList.as_view()),
 ]
 
 
 if settings.DEBUG:
+    import debug_toolbar
+
+    urlpatterns = [
+        path('__debug__/', include('debug_toolbar.urls')),
+    ] + urlpatterns
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
