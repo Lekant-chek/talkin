@@ -5,13 +5,13 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
-from catalog.views import PointAPIList
+from catalog.views import PointAPIList, PointAPIView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('catalog.urls')),
-
-    # path('api/v1/pointlist/', PointAPIList.as_view()),
+    path('api/v1/pointlist/', PointAPIView.as_view()),
+    path('api/v1/pointlist/<int:pk>/', PointAPIView.as_view()),
 ]
 
 

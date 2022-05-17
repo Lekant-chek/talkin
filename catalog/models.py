@@ -40,7 +40,7 @@ class Tag(models.Model):
 
 class Point(models.Model):
     title = models.CharField(max_length=100, blank=True)
-    slug = models.SlugField(max_length=200, unique=True, db_index=True, verbose_name="URL")
+    slug = models.SlugField(max_length=200, unique=True, db_index=True, blank=True, verbose_name="URL")
     text = models.TextField()
     translate = models.TextField()
     image = models.ImageField(upload_to='cards/', blank=True)

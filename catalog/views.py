@@ -6,6 +6,8 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView
 from rest_framework import generics
 from django.contrib.auth.mixins import LoginRequiredMixin
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .forms import *
 from .models import *
@@ -111,6 +113,35 @@ def pageNotFound(request, exception):
     return HttpResponseNotFound('<h1>Страница не найдена</h1>')
 
 
+class PointAPIView(APIView):
+    def get(self, request):
+        p = Point.objects.all()
+        return Response({'points': PointSerializer(p, many=True).data})
+
+    def post(self, request):
+        serializer = PointSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({'point': serializer.data})
+
+    def put(self, request, *args, **kwargs):
+        pk = kwargs.get('pk', None)
+        if not pk:
+            return Response({'error': 'Method PUT not allowed'})
+
+        try:
+            instance = Point.objects.get(pk=pk)
+
+        except:
+            return Response({'error': 'Object PUT not allowed'})
+
+        serializer = PointSerializer(data=request.data, instance=instance)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'post': serializer.data})
+
+
 class PointAPIList(generics.ListCreateAPIView):
     queryset = Point.objects.all()
     serializer_class = PointSerializer
@@ -134,23 +165,3 @@ class PointDetailView(DetailView):
     context_object_name = 'point'
     slug_url_kwarg = 'point_slug'
 
-
-class RegisterUser(DataMixin, CreateView):
-    form_class = RegisterUserForm
-    template_name = 'catalog/register.html'
-    success_url = reverse_lazy('login')
-
-    def get_context_data(self, *, object_list=None, **kwargs):
-        context = super().get_context_data(**kwargs)
-        c_def = self.get_user_context(title='Регистрация')
-        return dict(list(context.items()) + list(c_def.items()))
-
-
-class LoginUser(DataMixin, LoginView):
-    form_class = AuthenticationForm
-    template_name = 'catalog/login.html'
-
-    def get_context_data(self, *, object_list=None, **kwargs):
-        context = super().get_context_data(**kwargs)
-        c_def = self.get_user_context(title='Авторизация')
-        return dict(list(context.items()) + list(c_def.items()))
