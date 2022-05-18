@@ -4,8 +4,9 @@ from django.http import HttpResponse, Http404, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView
-from rest_framework import generics
+from rest_framework import generics, viewsets
 from django.contrib.auth.mixins import LoginRequiredMixin
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -113,55 +114,19 @@ def pageNotFound(request, exception):
     return HttpResponseNotFound('<h1>Страница не найдена</h1>')
 
 
-class PointAPIView(APIView):
-    def get(self, request):
-        p = Point.objects.all()
-        return Response({'points': PointSerializer(p, many=True).data})
-
-    def post(self, request):
-        serializer = PointSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response({'point': serializer.data})
-
-    def put(self, request, *args, **kwargs):
-        pk = kwargs.get('pk', None)
-        if not pk:
-            return Response({'error': 'Method PUT not allowed'})
-
-        try:
-            instance = Point.objects.get(pk=pk)
-
-        except:
-            return Response({'error': 'Object PUT not allowed'})
-
-        serializer = PointSerializer(data=request.data, instance=instance)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({'post': serializer.data})
-
-
-class PointAPIList(generics.ListCreateAPIView):
-    queryset = Point.objects.all()
+class PointViewSet(viewsets.ModelViewSet):
     serializer_class = PointSerializer
 
-
-class HomeView(ListView):
-    model = Point
-    paginate_by = 5
-    template_name = 'catalog/home.html'
-
-
-class PointListView(ListView):
-    model = Point
-
     def get_queryset(self):
-        return Point.objects.filter(category__slug=self.kwargs.get('slug'))
+        pk = self.kwargs.get('pk')
 
+        if not pk:
+            return Point.objects.all()[:3]
 
-class PointDetailView(DetailView):
-    model = Point
-    context_object_name = 'point'
-    slug_url_kwarg = 'point_slug'
+        return Point.objects.filter(pk=pk)
+
+    @action(methods=['get'], detail=True)
+    def category(self, request, pk=None):
+        categories = Category.objects.get(pk=pk)
+        return Response({'categories': categories.name})
 

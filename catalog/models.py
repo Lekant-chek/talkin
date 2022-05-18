@@ -44,9 +44,9 @@ class Point(models.Model):
     text = models.TextField()
     translate = models.TextField()
     image = models.ImageField(upload_to='cards/', blank=True)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, verbose_name="Категории")
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=True, verbose_name="Категории")
     tags = models.ManyToManyField(Tag, related_name='point', blank=True)
-    student = models.ForeignKey(User, related_name='targets', on_delete=models.CASCADE)
+    student = models.ForeignKey(User, related_name='targets', verbose_name='Пользователь', on_delete=models.CASCADE)
     created_at = models.DateField(auto_now_add=True)
     is_complete = models.BooleanField(default=False)
 
