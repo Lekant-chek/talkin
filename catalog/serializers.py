@@ -3,7 +3,7 @@ from .models import Point
 
 
 class PointSerializer(serializers.ModelSerializer):
-    # user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    student = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Point

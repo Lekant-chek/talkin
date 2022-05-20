@@ -4,14 +4,17 @@ from django.http import HttpResponse, Http404, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, permissions
 from django.contrib.auth.mixins import LoginRequiredMixin
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .forms import *
 from .models import *
+from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from .utils import *
 from .serializers import PointSerializer
 
@@ -114,19 +117,26 @@ def pageNotFound(request, exception):
     return HttpResponseNotFound('<h1>Страница не найдена</h1>')
 
 
-class PointViewSet(viewsets.ModelViewSet):
+class PointApiListPagination(PageNumberPagination):
+    page_size = 3
+    page_size_query_param = 'page_size'
+    max_page_size = 10000
+
+
+class PointApiList(generics.ListCreateAPIView):
+    queryset = Point.objects.all()
     serializer_class = PointSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+    pagination_class = PointApiListPagination
 
-    def get_queryset(self):
-        pk = self.kwargs.get('pk')
 
-        if not pk:
-            return Point.objects.all()[:3]
+class PointApiUpdate(generics.RetrieveUpdateAPIView):
+    queryset = Point.objects.all()
+    serializer_class = PointSerializer
+    permission_classes = (IsAuthenticated, )
 
-        return Point.objects.filter(pk=pk)
 
-    @action(methods=['get'], detail=True)
-    def category(self, request, pk=None):
-        categories = Category.objects.get(pk=pk)
-        return Response({'categories': categories.name})
-
+class PointApiDestroy(generics.RetrieveDestroyAPIView):
+    queryset = Point.objects.all()
+    serializer_class = PointSerializer
+    permission_classes = (IsAdminOrReadOnly, )
